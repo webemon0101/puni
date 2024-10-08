@@ -2,16 +2,17 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>デバイス向きによる重力操作</title>
+    <title>レスポンシブデザインぷにぷに風ゲーム</title>
     <style>
         body { text-align: center; }
-        #gameCanvas { border: 1px solid black; }
+        #gameCanvas { border: 1px solid black; max-width: 90vw; max-height: 90vh; }
         .score { font-size: 20px; margin: 10px; }
     </style>
 </head>
 <body>
-    <h1>デバイス向きによる重力操作</h1>
-    <canvas id="gameCanvas" width="500" height="500"></canvas>
+    <h1>レスポンシブデザインぷにぷに風ゲーム</h1>
+    <canvas id="gameCanvas"></canvas>
+    <div class="score">Score: <span id="score">0</span></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.17.1/matter.min.js"></script>
     <script>
@@ -20,16 +21,37 @@
         const colors = ['red', 'blue', 'green', 'yellow'];
         const balls = [];
         const radius = 20;
-        const growTime = 3000;  // 同色のボールが3秒以上接触すると大きくなる
+        const growTime = 3000;  // 3秒以上接触で大きくなる
+        let score = 0;
+
+        // レスポンシブキャンバスの設定
+        const updateCanvasSize = () => {
+            canvas.width = Math.min(window.innerWidth * 0.9, 500);
+            canvas.height = Math.min(window.innerHeight * 0.9, 500);
+            centerX = canvas.width / 2;
+            centerY = canvas.height / 2;
+            boundaryRadius = Math.min(canvas.width, canvas.height) / 2 - 20;
+            drawCircularBoundary();
+        };
+
+        window.addEventListener('resize', updateCanvasSize);
+        updateCanvasSize();
 
         // Matter.jsエンジンの作成
         const engine = Matter.Engine.create();
         const world = engine.world;
 
-        // 丸い境界領域
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const boundaryRadius = 200;
+        // 円形領域の設定
+        let centerX = canvas.width / 2;
+        let centerY = canvas.height / 2;
+        let boundaryRadius = Math.min(canvas.width, canvas.height) / 2 - 20;
+
+        // 円形領域の描画
+        function drawCircularBoundary() {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, boundaryRadius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
 
         // ボールを生成
         function createBall(x, y, color) {
@@ -38,7 +60,7 @@
                 render: { fillStyle: color }
             });
             ball.color = color;
-            ball.touchStartTime = null;
+            ball.touching = {};
             balls.push(ball);
             Matter.World.add(world, ball);
         }
@@ -53,35 +75,48 @@
             createBall(x, y, color);
         }
 
-        // 同色のボールの接触時間を確認し、条件を満たせばサイズを大きくする
-        function checkAndGrowBalls() {
-            for (let i = 0; i < balls.length; i++) {
-                for (let j = i + 1; j < balls.length; j++) {
-                    const ballA = balls[i];
-                    const ballB = balls[j];
-                    if (ballA.color === ballB.color && Matter.SAT.collides(ballA, ballB).collided) {
-                        if (!ballA.touchStartTime) {
-                            ballA.touchStartTime = Date.now();
+        // 接触時間と4つ以上の連続したボールの削除チェック
+        function checkAndUpdateBalls() {
+            let toRemove = [];
+            balls.forEach(ball => {
+                balls.forEach(otherBall => {
+                    if (ball !== otherBall && ball.color === otherBall.color) {
+                        const collision = Matter.SAT.collides(ball, otherBall);
+                        if (collision.collided) {
+                            if (!ball.touching[otherBall.id]) {
+                                ball.touching[otherBall.id] = Date.now();
+                            }
+                            const elapsedTime = Date.now() - ball.touching[otherBall.id];
+                            if (elapsedTime >= growTime) {
+                                Matter.Body.scale(ball, 1.4, 1.4);
+                                Matter.Body.scale(otherBall, 1.4, 1.4);
+                                ball.touching[otherBall.id] = null;
+                            }
+                        } else {
+                            ball.touching[otherBall.id] = null;
                         }
-                        if (!ballB.touchStartTime) {
-                            ballB.touchStartTime = Date.now();
-                        }
-
-                        const elapsedA = Date.now() - ballA.touchStartTime;
-                        const elapsedB = Date.now() - ballB.touchStartTime;
-
-                        if (elapsedA >= growTime && elapsedB >= growTime) {
-                            Matter.Body.scale(ballA, 1.4, 1.4);
-                            Matter.Body.scale(ballB, 1.4, 1.4);
-                            ballA.touchStartTime = null;
-                            ballB.touchStartTime = null;
-                        }
-                    } else {
-                        ballA.touchStartTime = null;
-                        ballB.touchStartTime = null;
                     }
+                });
+            });
+
+            // 4つ以上連続の削除とスコア加算
+            balls.forEach((ball, index) => {
+                const connectedBalls = balls.filter(otherBall =>
+                    otherBall.color === ball.color &&
+                    Matter.SAT.collides(ball, otherBall).collided
+                );
+
+                if (connectedBalls.length >= 4) {
+                    toRemove = toRemove.concat(connectedBalls);
+                    score += Math.PI * Math.pow(ball.circleRadius, 2) * connectedBalls.length;
                 }
-            }
+            });
+
+            toRemove.forEach(ball => {
+                Matter.World.remove(world, ball);
+                balls.splice(balls.indexOf(ball), 1);
+            });
+            document.getElementById('score').textContent = Math.round(score);
         }
 
         // Matter.jsの更新ループ
@@ -91,10 +126,7 @@
         (function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 円形領域の描画
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, boundaryRadius, 0, Math.PI * 2);
-            ctx.stroke();
+            drawCircularBoundary();
 
             balls.forEach(ball => {
                 ctx.beginPath();
@@ -104,7 +136,7 @@
                 ctx.closePath();
             });
 
-            checkAndGrowBalls();
+            checkAndUpdateBalls();
 
             requestAnimationFrame(render);
         })();
@@ -113,7 +145,6 @@
         window.addEventListener('deviceorientation', (event) => {
             const { beta, gamma } = event;
 
-            // beta（前後の傾き）とgamma（左右の傾き）を基に重力の向きを計算
             const gravityX = Math.sin(gamma * (Math.PI / 180));
             const gravityY = Math.sin(beta * (Math.PI / 180));
 
@@ -132,7 +163,6 @@
                 const dy = y - ball.position.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 if (distance <= ball.circleRadius) {
-                    // ドラッグ対象のボールを指定
                     Matter.Body.setStatic(ball, true);
                     ball.isDragging = true;
                 }
