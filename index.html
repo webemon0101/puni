@@ -128,8 +128,7 @@
 
         // ゲームオーバー判定
         function checkGameOver() {
-            const uniqueColors = new Set(balls.map(ball => ball.color));
-            if (uniqueColors.size === 1 && !gameOver) {
+            if (balls.length <= 5 && !gameOver) {
                 gameOver = true;
                 clearInterval(timerInterval);
                 displayScoreboard();
