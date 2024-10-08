@@ -155,6 +155,16 @@
             startNewGame();
         }
 
+        // 円形領域の描画
+        function drawCircularBoundary() {
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 200, 0, Math.PI * 2);
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
         // ボールを生成
         function createBall(x, y, color) {
             const friction = frictionMap[color];
@@ -266,6 +276,7 @@
             function render() {
                 if (!gameOver) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawCircularBoundary(); // 円形領域を毎フレーム描画
 
                     balls.forEach(ball => {
                         ctx.beginPath();
