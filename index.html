@@ -104,7 +104,7 @@
     </div>
 
     <!-- ゲーム画面 -->
-    <canvas id="gameCanvas" width="500" height="500"></canvas>
+    <canvas id="gameCanvas" width="800" height="800"></canvas>
     <div class="timer" id="timerContainer">Time: <span id="timer">0</span>s</div>
 
     <!-- 得点画面 -->
@@ -129,7 +129,7 @@
         };
 
         let balls = [];
-        const radius = 20;
+        const radius = 40; // ボールの半径を2倍に
         const distanceThreshold = radius * 2 + 3;  // 直径+3ピクセルの距離
         let timeElapsed = 0;
         let gameOver = false;
@@ -137,7 +137,7 @@
         let timerInterval = null;
         let animationFrameId = null;
         let addBallInterval = null; // 5秒ごとのボール追加インターバル
-        const boundaryRadius = 200; // 円形領域の半径
+        const boundaryRadius = 400; // プレイ領域の半径を2倍に
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
 
