@@ -47,14 +47,19 @@
         let timeElapsed = 0;
         let gameOver = false;
         let ranking = [];
+        let timerInterval = null;
+        let animationFrameId = null;
 
         // タイマーの更新
-        const timerInterval = setInterval(() => {
-            if (!gameOver) {
-                timeElapsed++;
-                document.getElementById('timer').textContent = timeElapsed;
-            }
-        }, 1000);
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!gameOver) {
+                    timeElapsed++;
+                    document.getElementById('timer').textContent = timeElapsed;
+                }
+            }, 1000);
+        }
 
         // Matter.jsエンジンの作成
         const engine = Matter.Engine.create();
@@ -130,6 +135,7 @@
             if (balls.length <= 5 && !gameOver) {
                 gameOver = true;
                 clearInterval(timerInterval);
+                cancelAnimationFrame(animationFrameId);
                 displayScoreboard();
             }
         }
@@ -166,32 +172,38 @@
             document.getElementById('scoreboard').style.display = 'none';
             document.getElementById('restartButton').style.display = 'inline';
             addBalls(10);
+            startTimer();
+            startAnimation();
         }
 
         // Matter.jsの更新ループ
         Matter.Engine.run(engine);
 
         // 描画ループ
-        (function render() {
-            if (!gameOver) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function startAnimation() {
+            function render() {
+                if (!gameOver) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                drawCircularBoundary();
+                    drawCircularBoundary();
 
-                balls.forEach(ball => {
-                    ctx.beginPath();
-                    ctx.arc(ball.position.x, ball.position.y, ball.circleRadius, 0, Math.PI * 2);
-                    ctx.fillStyle = ball.color;
-                    ctx.fill();
-                    ctx.closePath();
-                });
+                    balls.forEach(ball => {
+                        ctx.beginPath();
+                        ctx.arc(ball.position.x, ball.position.y, ball.circleRadius, 0, Math.PI * 2);
+                        ctx.fillStyle = ball.color;
+                        ctx.fill();
+                        ctx.closePath();
+                    });
 
-                checkAndRemoveBalls();
-                checkGameOver();
+                    checkAndRemoveBalls();
+                    checkGameOver();
 
-                requestAnimationFrame(render);
+                    animationFrameId = requestAnimationFrame(render);
+                }
             }
-        })();
+            cancelAnimationFrame(animationFrameId);  // 前のアニメーションフレームをキャンセル
+            render();
+        }
 
         // デバイスの傾きによって重力方向を変更
         window.addEventListener('deviceorientation', (event) => {
@@ -259,6 +271,11 @@
                 }
             });
         });
+
+        // 初回のタイマーとアニメーションをスタート
+        startTimer();
+        startAnimation();
     </script>
 </body>
 </html>
+
