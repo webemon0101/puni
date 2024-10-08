@@ -47,7 +47,7 @@
                 render: { fillStyle: color }
             });
             ball.color = color;
-            ball.touching = {};
+            ball.touching = {};  // 接触中のボールと接触開始時間を保持
             balls.push(ball);
             Matter.World.add(world, ball);
         }
@@ -102,14 +102,14 @@
             });
         }
 
-        // 新しいランダムな色のボールを3秒ごとに追加
+        // 非同期で新しいランダムな色のボールを3秒ごとに追加
         setInterval(() => {
             const angle = Math.random() * Math.PI * 2;
             const r = Math.random() * (boundaryRadius - radius);
             const x = centerX + r * Math.cos(angle);
             const y = centerY + r * Math.sin(angle);
             const color = colors[Math.floor(Math.random() * colors.length)];
-            createBall(x, y, color);
+            requestAnimationFrame(() => createBall(x, y, color));
         }, 3000);
 
         // Matter.jsの更新ループ
