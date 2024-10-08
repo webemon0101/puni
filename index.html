@@ -21,7 +21,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const colors = ['red', 'blue', 'green', 'yellow'];
-        const balls = [];
+        let balls = [];
         const radius = 20;
         const growTime = 3000;  // 3秒以上接触で合体
         let score = 0;
@@ -80,9 +80,10 @@
         function checkAndCombineBalls() {
             const toCombine = [];
 
-            balls.forEach(ball => {
-                balls.forEach(otherBall => {
-                    if (ball !== otherBall && ball.color === otherBall.color) {
+            balls.forEach((ball, index) => {
+                for (let j = index + 1; j < balls.length; j++) {
+                    const otherBall = balls[j];
+                    if (ball.color === otherBall.color) {
                         const collision = Matter.SAT.collides(ball, otherBall);
                         if (collision.collided) {
                             if (!ball.touching[otherBall.id]) {
@@ -96,7 +97,7 @@
                             ball.touching[otherBall.id] = null;
                         }
                     }
-                });
+                }
             });
 
             // 合体リストを処理
@@ -114,8 +115,7 @@
                 // 元のボールを削除し、新しいボールを追加
                 Matter.World.remove(world, ball1);
                 Matter.World.remove(world, ball2);
-                balls.splice(balls.indexOf(ball1), 1);
-                balls.splice(balls.indexOf(ball2), 1);
+                balls = balls.filter(b => b !== ball1 && b !== ball2);
                 balls.push(combinedBall);
                 Matter.World.add(world, combinedBall);
             });
@@ -123,7 +123,7 @@
 
         // 4つ以上の連続削除と新しいボール追加
         function checkAndRemoveBalls() {
-            let toRemove = [];
+            const toRemove = [];
             balls.forEach(ball => {
                 const connectedBalls = balls.filter(otherBall =>
                     otherBall.color === ball.color &&
@@ -131,7 +131,7 @@
                 );
 
                 if (connectedBalls.length >= 4) {
-                    toRemove = toRemove.concat(connectedBalls);
+                    toRemove.push(...connectedBalls);
                     score += Math.PI * Math.pow(ball.circleRadius, 2) * connectedBalls.length;
                 }
             });
@@ -140,8 +140,8 @@
                 const removedCount = toRemove.length;
                 toRemove.forEach(ball => {
                     Matter.World.remove(world, ball);
-                    balls.splice(balls.indexOf(ball), 1);
                 });
+                balls = balls.filter(ball => !toRemove.includes(ball));
                 addBalls(removedCount + 2);
                 document.getElementById('score').textContent = Math.round(score);
             }
