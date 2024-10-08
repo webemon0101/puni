@@ -78,6 +78,8 @@
 
         // 合体処理：3秒以上接触した同色ボールを一つの大きなボールにする
         function checkAndCombineBalls() {
+            const toCombine = [];
+
             balls.forEach(ball => {
                 balls.forEach(otherBall => {
                     if (ball !== otherBall && ball.color === otherBall.color) {
@@ -88,31 +90,34 @@
                             }
                             const elapsedTime = Date.now() - ball.touching[otherBall.id];
                             if (elapsedTime >= growTime) {
-                                // 2つのボールを合体
-                                const newRadius = Math.sqrt(Math.pow(ball.circleRadius, 2) + Math.pow(otherBall.circleRadius, 2));
-                                const newX = (ball.position.x + otherBall.position.x) / 2;
-                                const newY = (ball.position.y + otherBall.position.y) / 2;
-
-                                // 新しい大きなボールを作成
-                                const combinedBall = Matter.Bodies.circle(newX, newY, newRadius, {
-                                    restitution: 0.8,
-                                    render: { fillStyle: ball.color }
-                                });
-                                combinedBall.color = ball.color;
-
-                                // 元のボールを削除し、新しいボールを追加
-                                Matter.World.remove(world, ball);
-                                Matter.World.remove(world, otherBall);
-                                balls.splice(balls.indexOf(ball), 1);
-                                balls.splice(balls.indexOf(otherBall), 1);
-                                balls.push(combinedBall);
-                                Matter.World.add(world, combinedBall);
+                                toCombine.push({ ball1: ball, ball2: otherBall });
                             }
                         } else {
                             ball.touching[otherBall.id] = null;
                         }
                     }
                 });
+            });
+
+            // 合体リストを処理
+            toCombine.forEach(({ ball1, ball2 }) => {
+                const newRadius = Math.sqrt(Math.pow(ball1.circleRadius, 2) + Math.pow(ball2.circleRadius, 2));
+                const newX = (ball1.position.x + ball2.position.x) / 2;
+                const newY = (ball1.position.y + ball2.position.y) / 2;
+
+                const combinedBall = Matter.Bodies.circle(newX, newY, newRadius, {
+                    restitution: 0.8,
+                    render: { fillStyle: ball1.color }
+                });
+                combinedBall.color = ball1.color;
+
+                // 元のボールを削除し、新しいボールを追加
+                Matter.World.remove(world, ball1);
+                Matter.World.remove(world, ball2);
+                balls.splice(balls.indexOf(ball1), 1);
+                balls.splice(balls.indexOf(ball2), 1);
+                balls.push(combinedBall);
+                Matter.World.add(world, combinedBall);
             });
         }
 
