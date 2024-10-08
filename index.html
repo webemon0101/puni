@@ -58,6 +58,7 @@
         let ranking = [];
         let timerInterval = null;
         let animationFrameId = null;
+        let addBallInterval = null; // 5秒ごとのボール追加インターバル
 
         // タイマーの更新
         function startTimer() {
@@ -149,6 +150,7 @@
             if (balls.length <= 3 && !gameOver) {
                 gameOver = true;
                 clearInterval(timerInterval);
+                clearInterval(addBallInterval);  // 5秒ごとのボール追加停止
                 cancelAnimationFrame(animationFrameId);
                 displayScoreboard();
             }
@@ -188,6 +190,10 @@
             addBalls(20);  // 初期ボール数を20個に設定
             startTimer();
             startAnimation();
+
+            // 5秒ごとの新しいボール追加タイマー
+            clearInterval(addBallInterval);
+            addBallInterval = setInterval(() => addBalls(1), 5000);
         }
 
         // Matter.jsの更新ループ
@@ -289,6 +295,9 @@
         // 初回のタイマーとアニメーションをスタート
         startTimer();
         startAnimation();
+        
+        // 5秒ごとの新しいボール追加タイマー
+        addBallInterval = setInterval(() => addBalls(1), 5000);
     </script>
 </body>
 </html>
