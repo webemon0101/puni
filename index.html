@@ -40,6 +40,12 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const colors = ['red', 'blue', 'green', 'yellow'];
+        const frictionMap = {
+            'red': 0.01,
+            'blue': 0.05,
+            'green': 0.1,
+            'yellow': 0.15
+        };
         let balls = [];
         const radius = 20;
         const distanceThreshold = radius * 2 + 3;  // 直径+3ピクセルの距離
@@ -81,6 +87,7 @@
         function createBall(x, y, color) {
             const ball = Matter.Bodies.circle(x, y, radius, {
                 restitution: 0.8,
+                friction: frictionMap[color],  // 色ごとの摩擦係数
                 render: { fillStyle: color }
             });
             ball.color = color;
@@ -100,10 +107,10 @@
             }
         }
 
-        // 初期ボールの配置
-        addBalls(10);
+        // 初期ボールの配置（20個）
+        addBalls(20);
 
-        // 2個以上の連続削除と1個のボール追加
+        // 3個以上の連続削除と1個のボール追加
         function checkAndRemoveBalls() {
             const toRemove = [];
             balls.forEach(ball => {
@@ -114,7 +121,7 @@
                     return otherBall.color === ball.color && distance <= distanceThreshold;
                 });
 
-                if (connectedBalls.length >= 2) {
+                if (connectedBalls.length >= 3) {
                     toRemove.push(...connectedBalls);
                     score += Math.PI * Math.pow(ball.circleRadius, 2) * connectedBalls.length;
                 }
@@ -132,7 +139,7 @@
 
         // ゲームオーバー判定
         function checkGameOver() {
-            if (balls.length <= 5 && !gameOver) {
+            if (balls.length <= 3 && !gameOver) {
                 gameOver = true;
                 clearInterval(timerInterval);
                 cancelAnimationFrame(animationFrameId);
@@ -171,7 +178,7 @@
             document.getElementById('gameCanvas').style.display = 'block';
             document.getElementById('scoreboard').style.display = 'none';
             document.getElementById('restartButton').style.display = 'inline';
-            addBalls(10);
+            addBalls(20);  // 初期ボール数を20個に設定
             startTimer();
             startAnimation();
         }
@@ -278,4 +285,3 @@
     </script>
 </body>
 </html>
-
