@@ -295,6 +295,9 @@
                         ctx.arc(ball.position.x, ball.position.y, ball.circleRadius, 0, Math.PI * 2);
                         ctx.fillStyle = ball.color;
                         ctx.fill();
+                        ctx.lineWidth = 3; // 境界線の太さ
+                        ctx.strokeStyle = "purple"; // 境界線の色
+                        ctx.stroke();
                         ctx.closePath();
                     });
 
