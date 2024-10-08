@@ -23,7 +23,7 @@
         const colors = ['red', 'blue', 'green', 'yellow'];
         let balls = [];
         const radius = 20;
-        const growTime = 3000;  // 3秒以上接触で合体
+        const distanceThreshold = radius * 2 + 3;  // 直径+3ピクセルの距離
         let score = 0;
         let timeElapsed = 0;
 
@@ -56,7 +56,6 @@
                 render: { fillStyle: color }
             });
             ball.color = color;
-            ball.touching = {};  // 接触中のボールと接触開始時間を保持
             balls.push(ball);
             Matter.World.add(world, ball);
         }
@@ -76,61 +75,18 @@
         // 初期ボールの配置
         addBalls(10);
 
-        // 合体処理：3秒以上接触した同色ボールを一つの大きなボールにする
-        function checkAndCombineBalls() {
-            const toCombine = [];
-
-            balls.forEach((ball, index) => {
-                for (let j = index + 1; j < balls.length; j++) {
-                    const otherBall = balls[j];
-                    if (ball.color === otherBall.color) {
-                        const collision = Matter.SAT.collides(ball, otherBall);
-                        if (collision.collided) {
-                            if (!ball.touching[otherBall.id]) {
-                                ball.touching[otherBall.id] = Date.now();
-                            }
-                            const elapsedTime = Date.now() - ball.touching[otherBall.id];
-                            if (elapsedTime >= growTime) {
-                                toCombine.push({ ball1: ball, ball2: otherBall });
-                            }
-                        } else {
-                            ball.touching[otherBall.id] = null;
-                        }
-                    }
-                }
-            });
-
-            // 合体リストを処理
-            toCombine.forEach(({ ball1, ball2 }) => {
-                const newRadius = Math.sqrt(Math.pow(ball1.circleRadius, 2) + Math.pow(ball2.circleRadius, 2));
-                const newX = (ball1.position.x + ball2.position.x) / 2;
-                const newY = (ball1.position.y + ball2.position.y) / 2;
-
-                const combinedBall = Matter.Bodies.circle(newX, newY, newRadius, {
-                    restitution: 0.8,
-                    render: { fillStyle: ball1.color }
-                });
-                combinedBall.color = ball1.color;
-
-                // 元のボールを削除し、新しいボールを追加
-                Matter.World.remove(world, ball1);
-                Matter.World.remove(world, ball2);
-                balls = balls.filter(b => b !== ball1 && b !== ball2);
-                balls.push(combinedBall);
-                Matter.World.add(world, combinedBall);
-            });
-        }
-
-        // 4つ以上の連続削除と新しいボール追加
+        // 3つ以上の連続削除と新しいボール追加
         function checkAndRemoveBalls() {
             const toRemove = [];
             balls.forEach(ball => {
-                const connectedBalls = balls.filter(otherBall =>
-                    otherBall.color === ball.color &&
-                    Matter.SAT.collides(ball, otherBall).collided
-                );
+                const connectedBalls = balls.filter(otherBall => {
+                    const dx = otherBall.position.x - ball.position.x;
+                    const dy = otherBall.position.y - ball.position.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    return otherBall.color === ball.color && distance <= distanceThreshold;
+                });
 
-                if (connectedBalls.length >= 4) {
+                if (connectedBalls.length >= 3) {
                     toRemove.push(...connectedBalls);
                     score += Math.PI * Math.pow(ball.circleRadius, 2) * connectedBalls.length;
                 }
@@ -164,7 +120,6 @@
                 ctx.closePath();
             });
 
-            checkAndCombineBalls();
             checkAndRemoveBalls();
 
             requestAnimationFrame(render);
