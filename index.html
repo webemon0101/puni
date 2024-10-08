@@ -16,7 +16,7 @@
         }
 
         h1 {
-            font-size: 2.5rem;
+            font-size: 3rem;
             margin-bottom: 20px;
         }
 
@@ -33,7 +33,7 @@
         }
 
         .timer {
-            font-size: 1.5rem;
+            font-size: 2rem;
             margin-top: 10px;
             display: none;
         }
@@ -60,7 +60,7 @@
         }
 
         .button {
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             padding: 0.8rem 1.5rem;
             margin-top: 20px;
             border: none;
@@ -248,7 +248,7 @@
             // ランキング表示（最新の記録を点滅させる）
             const rankingDiv = document.getElementById('ranking');
             rankingDiv.innerHTML = ranking.map((record, index) =>
-                `<p class="${index === ranking.length - 1 ? 'highlight' : ''}">
+                `<p class="${index === ranking.length - 1 ? 'highlight' : ''}" style="font-size: 1.8rem;">
                     ${index + 1}. 経過時間: ${record.time}秒
                 </p>`).join('');
         }
