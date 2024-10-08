@@ -98,7 +98,7 @@
         // 初期ボールの配置
         addBalls(10);
 
-        // 2個以上の連続削除と新しいボール追加
+        // 2個以上の連続削除と1個のボール追加
         function checkAndRemoveBalls() {
             const toRemove = [];
             balls.forEach(ball => {
@@ -116,12 +116,11 @@
             });
 
             if (toRemove.length > 0) {
-                const removedCount = toRemove.length;
                 toRemove.forEach(ball => {
                     Matter.World.remove(world, ball);
                 });
                 balls = balls.filter(ball => !toRemove.includes(ball));
-                addBalls(removedCount - 1);
+                addBalls(1);  // 常に1個のボールを追加
                 document.getElementById('score').textContent = Math.round(score);
             }
         }
