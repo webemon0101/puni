@@ -184,7 +184,7 @@
         function addBalls(count) {
             for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const r = Math.random() * (canvas.width / 2 - radius);
+                const r = Math.random() * (200 - radius); // 円形領域内にボールを配置
                 const x = canvas.width / 2 + r * Math.cos(angle);
                 const y = canvas.height / 2 + r * Math.sin(angle);
                 const color = colors[Math.floor(Math.random() * colors.length)];
@@ -295,6 +295,13 @@
             cancelAnimationFrame(animationFrameId);
             render();
         }
+
+        // デバイスの傾きで重力方向を変更
+        window.addEventListener('deviceorientation', (event) => {
+            const { beta, gamma } = event;
+            world.gravity.x = Math.sin(gamma * (Math.PI / 180)) * 3;
+            world.gravity.y = Math.sin(beta * (Math.PI / 180)) * 3;
+        });
 
         // 初回のタイマーとアニメーションをスタート
         addBallInterval = setInterval(() => addBalls(1), 5000);
