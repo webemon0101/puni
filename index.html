@@ -4,27 +4,18 @@
     <meta charset="UTF-8">
     <title>ぷにぷに風ゲーム</title>
     <style>
-        body { text-align: center; }
-        #gameCanvas { border: 1px solid black; width: 500px; height: 500px; }
-        .score, .timer { font-size: 20px; margin: 10px; }
-        .timer { position: absolute; top: 10px; right: 10px; }
+        body { text-align: center; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        #gameCanvas { border: 1px solid black; max-width: 100%; height: auto; }
+        .timer { font-size: 1.5rem; margin-top: 10px; }
         #scoreboard { display: none; }
         .highlight { animation: blink 1s linear infinite; }
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-        #restartButton {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 16px;
-        }
+        @keyframes blink { 50% { opacity: 0; } }
+        #restartButton { font-size: 1rem; padding: 0.5rem 1rem; margin-top: 15px; }
     </style>
 </head>
 <body>
     <h1>ぷにぷに風ゲーム</h1>
     <canvas id="gameCanvas" width="500" height="500"></canvas>
-    <div class="score">Score: <span id="score">0</span></div>
     <div class="timer">Time: <span id="timer">0</span>s</div>
     <button id="restartButton" onclick="startNewGame()">リスタート</button>
 
@@ -52,7 +43,6 @@
         let balls = [];
         const radius = 20;
         const distanceThreshold = radius * 2 + 3;  // 直径+3ピクセルの距離
-        let score = 0;
         let timeElapsed = 0;
         let gameOver = false;
         let ranking = [];
@@ -131,7 +121,6 @@
 
                 if (connectedBalls.length >= 3) {
                     toRemove.push(...connectedBalls);
-                    score += Math.PI * Math.pow(ball.circleRadius, 2) * connectedBalls.length;
                 }
             });
 
@@ -141,7 +130,6 @@
                 });
                 balls = balls.filter(ball => !toRemove.includes(ball));
                 addBalls(1);  // 常に1個のボールを追加
-                document.getElementById('score').textContent = Math.round(score);
             }
         }
 
@@ -164,25 +152,23 @@
             document.getElementById('restartButton').style.display = 'none';
 
             // ランキングに追加
-            ranking.push({ time: timeElapsed, score });
-            ranking.sort((a, b) => b.score - a.score);
+            ranking.push({ time: timeElapsed });
+            ranking.sort((a, b) => b.time - a.time);
 
             // ランキング表示
             const rankingDiv = document.getElementById('ranking');
             rankingDiv.innerHTML = ranking.map((record, index) =>
                 `<p class="${index === ranking.length - 1 ? 'highlight' : ''}">
-                    ${index + 1}. 得点: ${record.score}, 経過時間: ${record.time}秒
+                    ${index + 1}. 経過時間: ${record.time}秒
                 </p>`).join('');
         }
 
         // 新しいゲームを開始
         function startNewGame() {
-            score = 0;
             timeElapsed = 0;
             gameOver = false;
             balls.forEach(ball => Matter.World.remove(world, ball));
             balls = [];
-            document.getElementById('score').textContent = score;
             document.getElementById('timer').textContent = timeElapsed;
             document.getElementById('gameCanvas').style.display = 'block';
             document.getElementById('scoreboard').style.display = 'none';
