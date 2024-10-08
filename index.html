@@ -40,12 +40,15 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const colors = ['red', 'blue', 'green', 'yellow'];
+        
+        // 色ごとの摩擦係数を設定
         const frictionMap = {
-            'red': 0.01,
-            'blue': 0.05,
-            'green': 0.1,
-            'yellow': 0.15
+            'red': 0.05,
+            'blue': 0.1,
+            'green': 0.2,
+            'yellow': 0.3
         };
+
         let balls = [];
         const radius = 20;
         const distanceThreshold = radius * 2 + 3;  // 直径+3ピクセルの距離
@@ -85,9 +88,13 @@
 
         // ボールを生成
         function createBall(x, y, color) {
+            // 色ごとの摩擦係数を設定
+            const friction = frictionMap[color];
             const ball = Matter.Bodies.circle(x, y, radius, {
                 restitution: 0.8,
-                friction: frictionMap[color],  // 色ごとの摩擦係数
+                friction: friction,        // 摩擦係数
+                frictionStatic: friction,  // 静止摩擦係数
+                frictionAir: friction * 0.5, // 空気抵抗として摩擦を適用
                 render: { fillStyle: color }
             });
             ball.color = color;
