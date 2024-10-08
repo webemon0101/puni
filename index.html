@@ -8,6 +8,11 @@
         #gameCanvas { border: 1px solid black; width: 500px; height: 500px; }
         .score, .timer { font-size: 20px; margin: 10px; }
         .timer { position: absolute; top: 10px; right: 10px; }
+        #scoreboard { display: none; }
+        .highlight { animation: blink 1s linear infinite; }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -15,6 +20,13 @@
     <canvas id="gameCanvas" width="500" height="500"></canvas>
     <div class="score">Score: <span id="score">0</span></div>
     <div class="timer">Time: <span id="timer">0</span>s</div>
+
+    <!-- 得点画面 -->
+    <div id="scoreboard">
+        <h2>ランキング</h2>
+        <div id="ranking"></div>
+        <button onclick="startNewGame()">新しいゲームをスタート</button>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.17.1/matter.min.js"></script>
     <script>
@@ -26,11 +38,15 @@
         const distanceThreshold = radius * 2 + 3;  // 直径+3ピクセルの距離
         let score = 0;
         let timeElapsed = 0;
+        let gameOver = false;
+        let ranking = [];
 
         // タイマーの更新
-        setInterval(() => {
-            timeElapsed++;
-            document.getElementById('timer').textContent = timeElapsed;
+        const timerInterval = setInterval(() => {
+            if (!gameOver) {
+                timeElapsed++;
+                document.getElementById('timer').textContent = timeElapsed;
+            }
         }, 1000);
 
         // Matter.jsエンジンの作成
@@ -98,9 +114,51 @@
                     Matter.World.remove(world, ball);
                 });
                 balls = balls.filter(ball => !toRemove.includes(ball));
-                addBalls(removedCount + 2);
+                addBalls(removedCount - 1);
                 document.getElementById('score').textContent = Math.round(score);
             }
+        }
+
+        // ゲームオーバー判定
+        function checkGameOver() {
+            const uniqueColors = new Set(balls.map(ball => ball.color));
+            if (uniqueColors.size === 1 && !gameOver) {
+                gameOver = true;
+                clearInterval(timerInterval);
+                displayScoreboard();
+            }
+        }
+
+        // 得点画面の表示
+        function displayScoreboard() {
+            const scoreboard = document.getElementById('scoreboard');
+            scoreboard.style.display = 'block';
+            document.getElementById('gameCanvas').style.display = 'none';
+
+            // ランキングに追加
+            ranking.push({ time: timeElapsed, score });
+            ranking.sort((a, b) => b.score - a.score);
+
+            // ランキング表示
+            const rankingDiv = document.getElementById('ranking');
+            rankingDiv.innerHTML = ranking.map((record, index) =>
+                `<p class="${index === ranking.length - 1 ? 'highlight' : ''}">
+                    ${index + 1}. 得点: ${record.score}, 経過時間: ${record.time}秒
+                </p>`).join('');
+        }
+
+        // 新しいゲームを開始
+        function startNewGame() {
+            score = 0;
+            timeElapsed = 0;
+            gameOver = false;
+            balls.forEach(ball => Matter.World.remove(world, ball));
+            balls = [];
+            document.getElementById('score').textContent = score;
+            document.getElementById('timer').textContent = timeElapsed;
+            document.getElementById('gameCanvas').style.display = 'block';
+            document.getElementById('scoreboard').style.display = 'none';
+            addBalls(10);
         }
 
         // Matter.jsの更新ループ
@@ -108,21 +166,24 @@
 
         // 描画ループ
         (function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!gameOver) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            drawCircularBoundary();
+                drawCircularBoundary();
 
-            balls.forEach(ball => {
-                ctx.beginPath();
-                ctx.arc(ball.position.x, ball.position.y, ball.circleRadius, 0, Math.PI * 2);
-                ctx.fillStyle = ball.color;
-                ctx.fill();
-                ctx.closePath();
-            });
+                balls.forEach(ball => {
+                    ctx.beginPath();
+                    ctx.arc(ball.position.x, ball.position.y, ball.circleRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = ball.color;
+                    ctx.fill();
+                    ctx.closePath();
+                });
 
-            checkAndRemoveBalls();
+                checkAndRemoveBalls();
+                checkGameOver();
 
-            requestAnimationFrame(render);
+                requestAnimationFrame(render);
+            }
         })();
 
         // デバイスの傾きによって重力方向を変更
