@@ -6,13 +6,15 @@
     <style>
         body { text-align: center; }
         #gameCanvas { border: 1px solid black; width: 500px; height: 500px; }
-        .score { font-size: 20px; margin: 10px; }
+        .score, .timer { font-size: 20px; margin: 10px; }
+        .timer { position: absolute; top: 10px; right: 10px; }
     </style>
 </head>
 <body>
     <h1>ぷにぷに風ゲーム</h1>
     <canvas id="gameCanvas" width="500" height="500"></canvas>
     <div class="score">Score: <span id="score">0</span></div>
+    <div class="timer">Time: <span id="timer">0</span>s</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.17.1/matter.min.js"></script>
     <script>
@@ -23,6 +25,13 @@
         const radius = 20;
         const growTime = 3000;  // 3秒以上接触で合体
         let score = 0;
+        let timeElapsed = 0;
+
+        // タイマーの更新
+        setInterval(() => {
+            timeElapsed++;
+            document.getElementById('timer').textContent = timeElapsed;
+        }, 1000);
 
         // Matter.jsエンジンの作成
         const engine = Matter.Engine.create();
@@ -52,15 +61,20 @@
             Matter.World.add(world, ball);
         }
 
-        // 初期ボールの配置
-        for (let i = 0; i < 10; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const r = Math.random() * (boundaryRadius - radius);
-            const x = centerX + r * Math.cos(angle);
-            const y = centerY + r * Math.sin(angle);
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            createBall(x, y, color);
+        // 指定した数のボールをランダムに生成
+        function addBalls(count) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const r = Math.random() * (boundaryRadius - radius);
+                const x = centerX + r * Math.cos(angle);
+                const y = centerY + r * Math.sin(angle);
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                createBall(x, y, color);
+            }
         }
+
+        // 初期ボールの配置
+        addBalls(10);
 
         // 合体処理：3秒以上接触した同色ボールを一つの大きなボールにする
         function checkAndCombineBalls() {
@@ -102,15 +116,31 @@
             });
         }
 
-        // 非同期で新しいランダムな色のボールを3秒ごとに追加
-        setInterval(() => {
-            const angle = Math.random() * Math.PI * 2;
-            const r = Math.random() * (boundaryRadius - radius);
-            const x = centerX + r * Math.cos(angle);
-            const y = centerY + r * Math.sin(angle);
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            requestAnimationFrame(() => createBall(x, y, color));
-        }, 3000);
+        // 4つ以上の連続削除と新しいボール追加
+        function checkAndRemoveBalls() {
+            let toRemove = [];
+            balls.forEach(ball => {
+                const connectedBalls = balls.filter(otherBall =>
+                    otherBall.color === ball.color &&
+                    Matter.SAT.collides(ball, otherBall).collided
+                );
+
+                if (connectedBalls.length >= 4) {
+                    toRemove = toRemove.concat(connectedBalls);
+                    score += Math.PI * Math.pow(ball.circleRadius, 2) * connectedBalls.length;
+                }
+            });
+
+            if (toRemove.length > 0) {
+                const removedCount = toRemove.length;
+                toRemove.forEach(ball => {
+                    Matter.World.remove(world, ball);
+                    balls.splice(balls.indexOf(ball), 1);
+                });
+                addBalls(removedCount + 2);
+                document.getElementById('score').textContent = Math.round(score);
+            }
+        }
 
         // Matter.jsの更新ループ
         Matter.Engine.run(engine);
@@ -130,6 +160,7 @@
             });
 
             checkAndCombineBalls();
+            checkAndRemoveBalls();
 
             requestAnimationFrame(render);
         })();
