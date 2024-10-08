@@ -16,12 +16,12 @@
         }
 
         h1 {
-            font-size: 3rem;
+            font-size: 3.5rem;
             margin-bottom: 20px;
         }
 
         .large-text {
-            font-size: 1.8rem;
+            font-size: 2rem;
             margin: 15px;
         }
 
@@ -33,7 +33,7 @@
         }
 
         .timer {
-            font-size: 2rem;
+            font-size: 2.5rem;
             margin-top: 10px;
             display: none;
             position: absolute;
@@ -51,7 +51,7 @@
         }
 
         #rulePage p {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             line-height: 1.6;
             margin: 10px 0;
         }
@@ -67,8 +67,8 @@
         }
 
         .button {
-            font-size: 1.5rem;
-            padding: 0.8rem 1.5rem;
+            font-size: 1.8rem;
+            padding: 1rem 2rem;
             margin-top: 20px;
             border: none;
             border-radius: 30px;
@@ -96,6 +96,7 @@
         <h1>ぷにぷに風ゲーム</h1>
         <p class="large-text">ルール説明：</p>
         <p>画面内のボールが3個以下になるとゲームオーバーです。</p>
+        <p>ボールが3個以下になるまでのタイムを競います。</p>
         <p>5秒ごとにランダムな色のボールが追加されます。</p>
         <p>同じ色のボールが3つ連続すると消え、新しいボールが追加されます。</p>
         <button id="startButton" class="button" onclick="startGame()">ゲームスタート</button>
@@ -255,7 +256,7 @@
             // ランキング表示（直近の結果を点滅させる）
             const rankingDiv = document.getElementById('ranking');
             rankingDiv.innerHTML = ranking.map((record, index) =>
-                `<p class="${record.time === timeElapsed ? 'highlight' : ''}" style="font-size: 1.8rem;">
+                `<p class="${record.time === timeElapsed ? 'highlight' : ''}" style="font-size: 2rem;">
                     ${index + 1}. 経過時間: ${record.time}秒
                 </p>`).join('');
         }
