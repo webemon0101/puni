@@ -13,6 +13,12 @@
         @keyframes blink {
             50% { opacity: 0; }
         }
+        #restartButton {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -20,6 +26,7 @@
     <canvas id="gameCanvas" width="500" height="500"></canvas>
     <div class="score">Score: <span id="score">0</span></div>
     <div class="timer">Time: <span id="timer">0</span>s</div>
+    <button id="restartButton" onclick="startNewGame()">リスタート</button>
 
     <!-- 得点画面 -->
     <div id="scoreboard">
@@ -91,7 +98,7 @@
         // 初期ボールの配置
         addBalls(10);
 
-        // 3つ以上の連続削除と新しいボール追加
+        // 2個以上の連続削除と新しいボール追加
         function checkAndRemoveBalls() {
             const toRemove = [];
             balls.forEach(ball => {
@@ -102,7 +109,7 @@
                     return otherBall.color === ball.color && distance <= distanceThreshold;
                 });
 
-                if (connectedBalls.length >= 3) {
+                if (connectedBalls.length >= 2) {
                     toRemove.push(...connectedBalls);
                     score += Math.PI * Math.pow(ball.circleRadius, 2) * connectedBalls.length;
                 }
@@ -134,6 +141,7 @@
             const scoreboard = document.getElementById('scoreboard');
             scoreboard.style.display = 'block';
             document.getElementById('gameCanvas').style.display = 'none';
+            document.getElementById('restartButton').style.display = 'none';
 
             // ランキングに追加
             ranking.push({ time: timeElapsed, score });
@@ -158,6 +166,7 @@
             document.getElementById('timer').textContent = timeElapsed;
             document.getElementById('gameCanvas').style.display = 'block';
             document.getElementById('scoreboard').style.display = 'none';
+            document.getElementById('restartButton').style.display = 'inline';
             addBalls(10);
         }
 
