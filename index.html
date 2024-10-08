@@ -65,6 +65,9 @@
         const engine = Matter.Engine.create();
         const world = engine.world;
 
+        // 重力加速度を3倍に設定
+        world.gravity.y = 3;
+
         // 円形領域の設定
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
@@ -153,7 +156,7 @@
 
             // ランキングに追加
             ranking.push({ time: timeElapsed });
-            ranking.sort((a, b) => b.time - a.time);
+            ranking.sort((a, b) => a.time - b.time);  // 時間が少ないほど上位に
 
             // ランキング表示
             const rankingDiv = document.getElementById('ranking');
@@ -215,8 +218,8 @@
         window.addEventListener('deviceorientation', (event) => {
             const { beta, gamma } = event;
 
-            const gravityX = Math.sin(gamma * (Math.PI / 180));
-            const gravityY = Math.sin(beta * (Math.PI / 180));
+            const gravityX = Math.sin(gamma * (Math.PI / 180)) * 3;  // 重力を3倍に設定
+            const gravityY = Math.sin(beta * (Math.PI / 180)) * 3;
 
             world.gravity.x = gravityX;
             world.gravity.y = gravityY;
@@ -287,3 +290,4 @@
     </script>
 </body>
 </html>
+
